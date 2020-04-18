@@ -20,3 +20,9 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+
+Route::middleware('auth')->prefix('upwork')->name('upwork.')->group(function () {
+    Route::get('/statement', 'UpworkTransactionController@create')->name('statement');
+    Route::post('/statement', 'UpworkTransactionController@store')->name('statement');
+});
+
