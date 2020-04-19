@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Entry;
 use App\Organization;
 use App\UpworkTransaction;
 use Carbon\Carbon;
@@ -47,30 +48,43 @@ class UpworkTransactionController extends Controller
 
         $csv = Reader::createFromPath($upworkStatement->getPathname(), 'r');
         $csv->setHeaderOffset(0);
-        $transactions = $csv->getRecords();
+        $transactionRecords = $csv->getRecords();
 
-        foreach ($transactions as $transaction) {
-            $transaction = UpworkTransaction::firstOrNew(
+        foreach ($transactionRecords as $transactionRecord) {
+            $upworkTransaction = UpworkTransaction::firstOrNew(
                 [
-                    'reference_id' => $transaction['Ref ID'],
+                    'reference_id' => $transactionRecord['Ref ID'],
                 ],
                 [
-                    'date' => Carbon::parse($transaction['Date']),
-                    'type' => $transaction['Type'],
-                    'description' => $transaction['Description'],
-                    'agency' => $transaction['Agency'] ?: null,
-                    'freelancer' => $transaction['Freelancer'] ?: null,
-                    'team' => $transaction['Team'] ?: null,
-                    'account_name' => $transaction['Account Name'],
-                    'po' => $transaction['PO'] ?: null,
-                    'amount' => $transaction['Amount'],
-                    'amount_in_local_currency' => $transaction['Amount in local currency'] ?: null,
-                    'currency' => $transaction['Currency'] ?: null,
-                    'balance' => $transaction['Balance'] ?: null,
+                    'date' => Carbon::parse($transactionRecord['Date']),
+                    'type' => $transactionRecord['Type'],
+                    'description' => $transactionRecord['Description'],
+                    'agency' => $transactionRecord['Agency'] ?: null,
+                    'freelancer' => $transactionRecord['Freelancer'] ?: null,
+                    'team' => $transactionRecord['Team'] ?: null,
+                    'account_name' => $transactionRecord['Account Name'],
+                    'po' => $transactionRecord['PO'] ?: null,
+                    'amount' => $transactionRecord['Amount'],
+                    'amount_in_local_currency' => $transactionRecord['Amount in local currency'] ?: null,
+                    'currency' => $transactionRecord['Currency'] ?: null,
+                    'balance' => $transactionRecord['Balance'] ?: null,
                 ]
             );
 
-            $organization->transactions()->save($transaction);
+            if ($upworkTransaction->exists) {
+                continue;
+            }
+
+            $upworkTransaction->organization()->associate($organization);
+
+            $entry = new Entry([
+                'value' => $transactionRecord['Amount'],
+                'date' => Carbon::parse($transactionRecord['Date']),
+                'type' => 0
+            ]);
+            $organization->entries()->save($entry);
+            $entry->upworkTransactions()->save($upworkTransaction);
+            $organization->upworkTransactions()->save($upworkTransaction);
         }
 
         return back()->with('status', 'Statement is uploaded successfully.');
