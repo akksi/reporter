@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Organization extends Model
 {
-    public function transactions()
+    public function entries()
+    {
+        return $this->hasMany(Entry::class);
+    }
+
+    public function upworkTransactions()
     {
         return $this->hasMany(UpworkTransaction::class);
     }

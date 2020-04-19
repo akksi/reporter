@@ -21,4 +21,12 @@ class UpworkTransaction extends Model
         'currency',
         'balance',
     ];
+
+    public function organization() {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function entry() {
+        return $this->belongsTo(Entry::class);
+    }
 }
