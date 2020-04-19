@@ -14,7 +14,7 @@
                         </div>
                     @endif
 
-                    You are logged in!
+                    <a href="{{ route('upwork.statement') }}">Upload an Upwork Statement</a>
                 </div>
             </div>
         </div>
